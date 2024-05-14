@@ -2,15 +2,15 @@ import discord
 from discord.ext import commands
 import aiohttp
 from info import *
+import io
 
 bot = commands.Bot(command_prefix=".", intents=discord.Intents.all())
-
-
 
 
 @bot.event
 async def on_ready():
     print("Online")
+
 
 @bot.command()
 async def req(ctx: commands.Context, *, prompt: str):
@@ -30,6 +30,7 @@ async def req(ctx: commands.Context, *, prompt: str):
             response = await resp.json()
             await ctx.reply(response)
 
+
 @bot.command()
 async def req2(ctx: commands.Context, *, prompt: str):
     headers = {"Authorization": f"Bearer {hf_token}"}
@@ -43,6 +44,7 @@ async def req2(ctx: commands.Context, *, prompt: str):
 
     await ctx.reply(formatted_text)
 
+
 @bot.command()
 async def chat(ctx: commands.Context, *, prompt: str):
     headers = {"Authorization": f"Bearer {hf_token}"}
@@ -55,5 +57,21 @@ async def chat(ctx: commands.Context, *, prompt: str):
     formatted_text = generated_text.replace('\n', '\n\n')
 
     await ctx.reply(formatted_text)
+
+
+@bot.command()
+async def img(ctx: commands.Context, *, prompt: str):
+    headers = {"Authorization": f"Bearer {hf_token}"}
+
+    async with aiohttp.ClientSession() as session:
+        async with session.post(Stable_diffusion_URL, headers=headers, json={"inputs": prompt}) as resp:
+            response = await resp.read()
+
+    if response:
+        file = discord.File(io.BytesIO(response), filename="generated_image.jpg")
+        await ctx.reply(file=file)
+    else:
+        await ctx.reply("Failed to generate image.")
+
 
 bot.run(token)
